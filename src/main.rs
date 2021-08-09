@@ -36,7 +36,8 @@ async fn run_server() {
 
 fn main() {
     // Setting up the logging/tracing stuff
-    let tracing_directive_str = std::env::var("RUST_LOG").unwrap_or("rustyocean=info".to_owned());
+    let log_level = std::env::var("LOG").unwrap_or("info".to_string());
+    let tracing_directive_str = format!("rustyocean={}", log_level);
     let tracing_sub = tracing_subscriber::FmtSubscriber::builder()
         .json()
         .with_level(true)
