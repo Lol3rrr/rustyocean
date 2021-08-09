@@ -21,7 +21,7 @@ async fn handle(_req: hyper::Request<hyper::Body>) -> Result<hyper::Response<hyp
 }
 
 async fn run_server() {
-    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 9100));
+    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 9100));
 
     let make_service = hyper::service::make_service_fn(|_conn| async {
         Ok::<_, String>(hyper::service::service_fn(handle))
