@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use prometheus::Encoder;
 use rustyocean::{api, register_metrics, update_metrics};
@@ -62,7 +62,7 @@ fn main() {
 
     register_metrics(&REGISTRY);
 
-    rt.spawn(update_metrics(client.clone()));
+    rt.spawn(update_metrics(client.clone(), Duration::from_secs(60)));
 
     rt.block_on(run_server());
 }

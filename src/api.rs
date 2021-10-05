@@ -1,12 +1,18 @@
+//! This contains all the Stuff to interact with the DigitalOcean API
+
 use std::fmt::Debug;
 
 use serde::Deserialize;
 
+/// The API Instance to interact with the Digital Ocean API as a given User
 pub struct API {
+    /// The API Key used to authenticate with the API
     key: String,
+    /// The Reqwest Client used to perform all these Requests
     client: reqwest::Client,
 }
 
+/// The Base API-Url for the DigitalOcean API
 const BASE_URL: &str = "https://api.digitalocean.com/v2";
 
 #[derive(Debug, Deserialize)]
