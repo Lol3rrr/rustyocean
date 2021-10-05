@@ -5,9 +5,26 @@ use std::fmt::Debug;
 /// The API Instance to interact with the Digital Ocean API as a given User
 pub struct API {
     /// The API Key used to authenticate with the API
-    key: String,
+    key: ApiKey,
     /// The Reqwest Client used to perform all these Requests
     client: reqwest::Client,
+}
+
+/// This represents a single API Key for the DigitalOcean API
+pub struct ApiKey {
+    /// The underlying Key String
+    key: String,
+}
+
+impl From<String> for ApiKey {
+    fn from(k: String) -> Self {
+        Self { key: k }
+    }
+}
+impl From<&str> for ApiKey {
+    fn from(k: &str) -> Self {
+        Self { key: k.to_string() }
+    }
 }
 
 /// The Base API-Url for the DigitalOcean API
@@ -16,10 +33,14 @@ const BASE_URL: &str = "https://api.digitalocean.com/v2";
 mod resources;
 pub use resources::*;
 
+/// The Error received when it could not get something from the API
 #[derive(Debug)]
 pub enum GetError {
+    /// Something with performing the Request itself went wrong
     Reqwest(reqwest::Error),
+    /// The Returned Response has an unexpected StatusCode
     StatusCode(reqwest::StatusCode),
+    /// The Response Payload had an unexpected/invalid Format
     Serde(serde_json::Error),
 }
 
@@ -34,10 +55,14 @@ impl From<serde_json::Error> for GetError {
     }
 }
 
+/// The Error received when it could not load a specific Resource from the API
 #[derive(Debug)]
 pub enum GetResouceError {
+    /// Loading the Data from the Resource failed
     GetResource(GetError),
+    /// The Data from the API was missing some required Data
     MissingData,
+    /// The Data could not be deserlazed properly
     Serde(serde_json::Error),
 }
 
@@ -53,9 +78,10 @@ impl From<serde_json::Error> for GetResouceError {
 }
 
 impl API {
+    /// This creates a new API Instance with the given API-Key
     pub fn new<I>(key: I) -> Self
     where
-        I: Into<String>,
+        I: Into<ApiKey>,
     {
         let client = reqwest::Client::new();
         Self {
@@ -64,6 +90,7 @@ impl API {
         }
     }
 
+    /// Simply attempts to load the given Resource from the DigitalOcean API
     #[tracing::instrument(skip(self))]
     pub async fn get<I>(&self, resource: I) -> Result<serde_json::Value, GetError>
     where
@@ -81,7 +108,7 @@ impl API {
         let req = self
             .client
             .request(reqwest::Method::GET, url)
-            .bearer_auth(&self.key)
+            .bearer_auth(&self.key.key)
             .build()?;
 
         let response = self.client.execute(req).await?;
@@ -96,6 +123,7 @@ impl API {
         return Ok(body);
     }
 
+    /// Loads the Account Data for the Account assosicated with the API Key
     pub async fn get_account(&self) -> Result<Account, GetResouceError> {
         let raw_body = self.get("/account").await?;
 
@@ -106,6 +134,7 @@ impl API {
         Ok(acc)
     }
 
+    /// Loads the Balance information for the Account assosicated with the API Key
     pub async fn get_balance(&self) -> Result<Balance, GetResouceError> {
         let raw_body = self.get("/customers/my/balance").await?;
 
@@ -113,6 +142,7 @@ impl API {
         Ok(balance)
     }
 
+    /// Loads a list of all Droplets
     pub async fn get_droplets(&self) -> Result<Vec<Droplet>, GetResouceError> {
         let raw_body = self.get("/droplets").await?;
 
@@ -123,6 +153,7 @@ impl API {
         Ok(droplets)
     }
 
+    /// Loads a list of all the Floating IP's
     pub async fn get_floating_ips(&self) -> Result<Vec<FloatingIp>, GetResouceError> {
         let raw_body = self.get("/floating_ips").await?;
 
@@ -133,6 +164,7 @@ impl API {
         Ok(ips)
     }
 
+    /// Loads a list of all the VPC's
     pub async fn get_vpcs(&self) -> Result<Vec<VPC>, GetResouceError> {
         let raw_body = self.get("/vpcs").await?;
 
@@ -141,6 +173,7 @@ impl API {
         Ok(vpcs)
     }
 
+    /// Loads a list of all the CDN-Endpoint's
     pub async fn get_cdn_endpoints(&self) -> Result<Vec<CdnEndpoint>, GetResouceError> {
         let raw_body = self.get("/cdn/endpoints").await?;
 

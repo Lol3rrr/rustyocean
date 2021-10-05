@@ -20,8 +20,8 @@ async fn handle(_req: hyper::Request<hyper::Body>) -> Result<hyper::Response<hyp
     Ok(hyper::Response::new(hyper::Body::from(buffer)))
 }
 
-async fn run_server() {
-    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 9100));
+async fn run_server(port: u16) {
+    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
 
     let make_service = hyper::service::make_service_fn(|_conn| async {
         Ok::<_, String>(hyper::service::service_fn(handle))
@@ -35,6 +35,9 @@ async fn run_server() {
 }
 
 fn main() {
+    let listen_port: u16 = 9100;
+    let update_wait_time = Duration::from_secs(60);
+
     // Setting up the logging/tracing stuff
     let log_level = std::env::var("LOG").unwrap_or("info".to_string());
     let tracing_directive_str = format!("rustyocean={}", log_level);
@@ -62,7 +65,6 @@ fn main() {
 
     register_metrics(&REGISTRY);
 
-    rt.spawn(update_metrics(client.clone(), Duration::from_secs(60)));
-
-    rt.block_on(run_server());
+    rt.spawn(update_metrics(client.clone(), update_wait_time));
+    rt.block_on(run_server(listen_port));
 }
