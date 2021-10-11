@@ -122,7 +122,7 @@ impl API {
 
         let body = serde_json::from_slice(&raw_body)?;
 
-        return Ok(body);
+        Ok(body)
     }
 
     /// Simply loads the given Resource from the API

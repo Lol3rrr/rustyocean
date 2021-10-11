@@ -39,7 +39,7 @@ fn main() {
     let update_wait_time = Duration::from_secs(60);
 
     // Setting up the logging/tracing stuff
-    let log_level = std::env::var("LOG").unwrap_or("info".to_string());
+    let log_level = std::env::var("LOG").unwrap_or_else(|_| "info".to_string());
     let tracing_directive_str = format!("rustyocean={}", log_level);
     let tracing_sub = tracing_subscriber::FmtSubscriber::builder()
         .json()
@@ -65,6 +65,6 @@ fn main() {
 
     register_metrics(&REGISTRY);
 
-    rt.spawn(update_metrics(client.clone(), update_wait_time));
+    rt.spawn(update_metrics(client, update_wait_time));
     rt.block_on(run_server(listen_port));
 }
