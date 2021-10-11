@@ -63,6 +63,16 @@ pub fn register_metrics(registry: &Registry) {
         .unwrap();
 }
 
+fn clear_metrics() {
+    DROPLET_UP.reset();
+    DROPLET_VCPUS.reset();
+    DROPLET_MEMORY.reset();
+    DROPLET_DISK.reset();
+    DROPLET_TRANSFER.reset();
+    DROPLET_PRICE_MONTHLY.reset();
+    DROPLET_PRICE_HOURLY.reset();
+}
+
 #[tracing::instrument(skip(client))]
 pub async fn update(client: &api::API) {
     let droplets = match client.get_droplets().await {
@@ -72,6 +82,8 @@ pub async fn update(client: &api::API) {
             return;
         }
     };
+
+    clear_metrics();
 
     for droplet in droplets.iter() {
         let id = droplet.id;
