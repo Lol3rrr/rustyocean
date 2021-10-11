@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use prometheus::{Gauge, Registry};
 
-use crate::api;
+use crate::api::{self, Balance};
 
 lazy_static! {
     static ref ACCOUNT_BALANCE: Gauge =
@@ -26,7 +26,7 @@ pub fn register_metrics(registry: &Registry) {
 
 #[tracing::instrument(skip(client))]
 pub async fn update(client: &api::API) {
-    let balance = match client.get_balance().await {
+    let balance = match client.load_resource::<Balance>().await {
         Ok(b) => b,
         Err(e) => {
             tracing::error!("Loading-Balance: {:?}", e);

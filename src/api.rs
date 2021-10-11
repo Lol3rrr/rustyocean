@@ -2,6 +2,8 @@
 
 use std::fmt::Debug;
 
+use async_trait::async_trait;
+
 /// The API Instance to interact with the Digital Ocean API as a given User
 pub struct API {
     /// The API Key used to authenticate with the API
@@ -123,64 +125,22 @@ impl API {
         return Ok(body);
     }
 
-    /// Loads the Account Data for the Account assosicated with the API Key
-    pub async fn get_account(&self) -> Result<Account, GetResouceError> {
-        let raw_body = self.get("/account").await?;
-
-        let acc_value = raw_body
-            .get("account")
-            .ok_or(GetResouceError::MissingData)?;
-        let acc = serde_json::from_value(acc_value.clone())?;
-        Ok(acc)
+    /// Simply loads the given Resource from the API
+    pub async fn load_resource<R>(&self) -> Result<R::LoadData, GetResouceError>
+    where
+        R: APIRessource,
+    {
+        R::load(self).await
     }
+}
 
-    /// Loads the Balance information for the Account assosicated with the API Key
-    pub async fn get_balance(&self) -> Result<Balance, GetResouceError> {
-        let raw_body = self.get("/customers/my/balance").await?;
+/// Defines a simple Interface to load a Resource from the API
+#[async_trait]
+pub trait APIRessource {
+    /// The Concrete Type to be loaded, this also allows you to load a List of Resources and not
+    /// only a single Instance
+    type LoadData: Sized;
 
-        let balance = serde_json::from_value(raw_body)?;
-        Ok(balance)
-    }
-
-    /// Loads a list of all Droplets
-    pub async fn get_droplets(&self) -> Result<Vec<Droplet>, GetResouceError> {
-        let raw_body = self.get("/droplets").await?;
-
-        let raw_droplets = raw_body
-            .get("droplets")
-            .ok_or(GetResouceError::MissingData)?;
-        let droplets = serde_json::from_value(raw_droplets.clone())?;
-        Ok(droplets)
-    }
-
-    /// Loads a list of all the Floating IP's
-    pub async fn get_floating_ips(&self) -> Result<Vec<FloatingIp>, GetResouceError> {
-        let raw_body = self.get("/floating_ips").await?;
-
-        let raw_ips = raw_body
-            .get("floating_ips")
-            .ok_or(GetResouceError::MissingData)?;
-        let ips = serde_json::from_value(raw_ips.clone())?;
-        Ok(ips)
-    }
-
-    /// Loads a list of all the VPC's
-    pub async fn get_vpcs(&self) -> Result<Vec<VPC>, GetResouceError> {
-        let raw_body = self.get("/vpcs").await?;
-
-        let raw_vpcs = raw_body.get("vpcs").ok_or(GetResouceError::MissingData)?;
-        let vpcs = serde_json::from_value(raw_vpcs.clone())?;
-        Ok(vpcs)
-    }
-
-    /// Loads a list of all the CDN-Endpoint's
-    pub async fn get_cdn_endpoints(&self) -> Result<Vec<CdnEndpoint>, GetResouceError> {
-        let raw_body = self.get("/cdn/endpoints").await?;
-
-        let raw_endpoints = raw_body
-            .get("endpoints")
-            .ok_or(GetResouceError::MissingData)?;
-        let endpoints = serde_json::from_value(raw_endpoints.clone())?;
-        Ok(endpoints)
-    }
+    /// Loads the Resource from the API
+    async fn load(api: &API) -> Result<Self::LoadData, GetResouceError>;
 }

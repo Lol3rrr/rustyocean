@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use prometheus::{labels, IntGaugeVec, Opts, Registry};
 
-use crate::api;
+use crate::api::{self, FloatingIps};
 
 lazy_static! {
     static ref FLOATING_IP: IntGaugeVec = IntGaugeVec::new(
@@ -17,7 +17,7 @@ pub fn register_metrics(registry: &Registry) {
 
 #[tracing::instrument(skip(client))]
 pub async fn update(client: &api::API) {
-    let floating_ips = match client.get_floating_ips().await {
+    let floating_ips = match client.load_resource::<FloatingIps>().await {
         Ok(f) => f,
         Err(e) => {
             tracing::error!("Loading Floating-IPs: {:?}", e);

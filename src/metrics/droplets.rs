@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use prometheus::{labels, GaugeVec, IntGaugeVec, Opts, Registry};
 
-use crate::api::{self, DropletStatus};
+use crate::api::{self, DropletStatus, Droplets};
 
 lazy_static! {
     static ref DROPLET_UP: IntGaugeVec = IntGaugeVec::new(
@@ -75,7 +75,7 @@ fn clear_metrics() {
 
 #[tracing::instrument(skip(client))]
 pub async fn update(client: &api::API) {
-    let droplets = match client.get_droplets().await {
+    let droplets = match client.load_resource::<Droplets>().await {
         Ok(d) => d,
         Err(e) => {
             tracing::error!("Loading-Droplets: {:?}", e);

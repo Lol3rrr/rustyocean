@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use prometheus::{labels, IntGaugeVec, Opts, Registry};
 
-use crate::api;
+use crate::api::{self, VPCs};
 
 lazy_static! {
     static ref VPC: IntGaugeVec = IntGaugeVec::new(
@@ -17,7 +17,7 @@ pub fn register_metrics(registry: &Registry) {
 
 #[tracing::instrument(skip(client))]
 pub async fn update(client: &api::API) {
-    let vpcs = match client.get_vpcs().await {
+    let vpcs = match client.load_resource::<VPCs>().await {
         Ok(v) => v,
         Err(e) => {
             tracing::error!("Loading VPCs: {:?}", e);

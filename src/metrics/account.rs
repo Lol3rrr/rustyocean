@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use prometheus::{IntGauge, Registry};
 
-use crate::api;
+use crate::api::{self, Account};
 
 lazy_static! {
     static ref DROPLET_LIMIT: IntGauge = IntGauge::new(
@@ -31,7 +31,7 @@ pub fn register_metrics(registry: &Registry) {
 
 #[tracing::instrument(skip(client))]
 pub async fn update(client: &api::API) {
-    let account = match client.get_account().await {
+    let account = match client.load_resource::<Account>().await {
         Ok(a) => a,
         Err(e) => {
             tracing::error!("Loading-Account: {:?}", e);

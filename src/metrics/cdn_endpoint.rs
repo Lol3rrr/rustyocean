@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use prometheus::{labels, IntGaugeVec, Opts, Registry};
 
-use crate::api;
+use crate::api::{self, CdnEndpoints};
 
 lazy_static! {
     static ref CDN_ENDPOINT: IntGaugeVec = IntGaugeVec::new(
@@ -17,7 +17,7 @@ pub fn register_metrics(registry: &Registry) {
 
 #[tracing::instrument(skip(client))]
 pub async fn update(client: &api::API) {
-    let cdn_endpoints = match client.get_cdn_endpoints().await {
+    let cdn_endpoints = match client.load_resource::<CdnEndpoints>().await {
         Ok(c) => c,
         Err(e) => {
             tracing::error!("Loading CDN-Endpoints: {:?}", e);
