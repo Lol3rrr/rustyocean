@@ -25,6 +25,8 @@ pub async fn update(client: &api::API) {
         }
     };
 
+    CDN_ENDPOINT.reset();
+
     for cdn_endpoint in cdn_endpoints.iter() {
         let ttl_str = cdn_endpoint.ttl.to_string();
 

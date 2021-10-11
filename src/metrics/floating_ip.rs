@@ -25,6 +25,8 @@ pub async fn update(client: &api::API) {
         }
     };
 
+    FLOATING_IP.reset();
+
     for floating_ip in floating_ips.iter() {
         let floating_ip_labels = labels! {
             "ip" => floating_ip.ip.as_ref(),
